@@ -3,10 +3,11 @@ RM ?= rm -f
 
 CFLAGS-y  := -Wall -Wextra -Wshadow -Werror -I. $(CFLAGS)
 
-CFLAGS-$(DEBUG)   += -DDEBUG=1 -ggdb -g3 -O0 -fanalyzer -fsanitize=undefined -fsanitize=thread -DLOG_STDOUT
+CFLAGS-$(DEBUG)   += -DDEBUG=1 -ggdb -g3 -O0 -fanalyzer -fsanitize=undefined -fsanitize=thread
+CFLAGS-${LOG_STDOUT} += -DLOG_STDOUT
 CFLAGS-$(RELEASE) += -O3 -DNDEBUG=1
 
-LDFLAGS-y := $(LDFLAGS)
+LDFLAGS-y := -lpthread $(LDFLAGS)
 
 TARGET  := jobs
 SOURCES := $(TARGET).c main.c

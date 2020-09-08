@@ -1,7 +1,12 @@
 #include <errno.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+
+// A5 part 4
+#include <pthread.h>
+// A5 part 4 end
 
 #include "debug.h"
 #include "jobs.h"
@@ -9,6 +14,19 @@
 #define DEBUG_ID "jobs"
 
 struct jobs jobs;
+
+static void jobs_destroy(job_t* job) {
+  if (job == NULL) {
+    log_helper("job is null");
+    return;
+  }
+
+  if (job->destroy != NULL) {
+    job->destroy((void*)job);
+  } else {
+    free(job);
+  }
+}
 
 uint64_t get_time_ms(clockid_t clockid) {
   struct timespec ts;
@@ -48,17 +66,8 @@ out:
 }
 
 void jobs_remove(job_t* job) {
-  if (job == NULL) {
-    log_helper("job is null");
-    return;
-  }
-
-  if (job->destroy != NULL) {
-    job->destroy((void*)job);
-  } else {
-    TAILQ_REMOVE(&jobs, job, jobs);
-    free(job);
-  }
+  jobs_destroy(job);
+  TAILQ_REMOVE(&jobs, job, jobs);
 }
 
 void jobs_handle(void) {
@@ -81,6 +90,51 @@ void jobs_handle(void) {
     }
   }
 }
+
+// A5 part 4
+static job_t* get_next_job(void) {
+  job_t* job;
+  if (!TAILQ_EMPTY(&jobs)) {
+    job = TAILQ_FIRST(&jobs);
+    return job;
+  }
+  return NULL;
+}
+
+pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+void* jobs_handle_mt(void* thread_ctx) {
+  (void)thread_ctx;
+
+  while (true) {
+    job_t* job;
+    job_e job_ret;
+    uint64_t timestamp = get_time_ms(CLOCK_REALTIME);
+
+    pthread_mutex_lock(&lock);
+    job = get_next_job();
+    if (!job) {
+      pthread_mutex_unlock(&lock);
+      continue;
+    }
+
+    if (timestamp > job->tsms) {
+      TAILQ_REMOVE(&jobs, job, jobs);
+      pthread_mutex_unlock(&lock);
+    } else {
+      pthread_mutex_unlock(&lock);
+      continue;
+    }
+
+    job_ret = job->handler(job->ctx1, job->ctx2);
+    if (job_ret == JOB_ERR) {
+      log_helper("job error!");
+    }
+    if (job_ret != JOB_RUN) {
+      jobs_destroy(job);
+    }
+  }
+}
+// A5 part 4 end
 
 void jobs_init(void) {
   TAILQ_INIT(&jobs);

@@ -31,7 +31,11 @@ uint64_t get_time_ms(clockid_t clockid);
 job_e job_myjob_handle(void* ctx1, void* ctx2);
 // A1 part 3:
 void job_myjob_destroy(void* jobctx);
-// A1 part 3 end;
+// A1 part 3 end
+
+// A5 part 4
+void* jobs_handle_mt(void* thread_ctx);
+// A5 part 4 end
 
 job_t* jobs_add(job_e (*handler)(void* ctx1, void* ctx2),
                 void (*destroy)(void* jobctx),
