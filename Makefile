@@ -22,6 +22,8 @@ LDFLAGS := $(LDFLAGS-y)
 build: $(OBJECTS)
 	$(CC) $(CFLAGS) $(OBJECTS) $(LDFLAGS) -o $(TARGET)
 	$(RM) *.o
+	mkdir -p ./bin/
+	mv $(TARGET) bin/$(TARGET)
 
 all: build
 
