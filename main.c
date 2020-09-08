@@ -16,6 +16,8 @@
 //     a file.
 // Q5: create multiple threads, pull and run jobs from the queue with properly
 //     locking the queue, process jobs concurrently.
+// Q6: create a Makefile which will define a flag for printing logs to
+//     stdout instead of a file. Also add debug and release build options.
 
 #include <stdbool.h>
 #include <stdio.h>
